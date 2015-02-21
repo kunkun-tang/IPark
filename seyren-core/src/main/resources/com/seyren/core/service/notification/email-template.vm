@@ -1,0 +1,51 @@
+<html>
+	<head>
+		<style type="text/css">
+			table { border-collapse: collapse; }
+			table th, table td { padding: 0.5em; }
+			tr.OK { background-color: #468847; color: black; }
+			tr.WARN { background-color: #f89406; color: black; }
+			tr.ERROR { background-color: #b94a48; color: black; }
+			tr.UNKNOWN { background-color: #999999; color: black; }
+			tr.EXCEPTION { background-color: #333333; color: white; }			
+			th, td { border: 1px solid black; }
+		</style>
+	</head>
+	<body>
+		<h3><a href="$SEYREN_URL/#/checks/$CHECK.Id">$CHECK.Name</a></h3>
+#if ("$!CHECK.Description" != "")
+        <p>$CHECK.Description</p>
+#end
+#if ($ALERTS.size() == 1)
+		<p>The following target has changed from its previous state:</p>
+#else
+		<p>The following targets have changed from their previous state:</p>
+#end
+		<table>
+			<thead>
+				<tr>
+                    <th>Timestamp</th>
+					<th>Target</th>
+					<th>Value</th>
+					<th>Warn</th>
+					<th>Error</th>
+					<th>From</th>
+					<th>To</th>
+				</tr>
+			</thead>
+			<tbody>
+#foreach ($ALERT in $ALERTS)
+			    <tr class="$ALERT.ToType">
+                    <td>$ALERT.Timestamp.toString("yyyy-MM-dd HH:mm:ss")</td>
+			    	<td>$ALERT.Target</td>
+			    	<td>$ALERT.Value</td>
+                    <td>$CHECK.Warn</td>
+                    <td>$CHECK.Error</td>
+			    	<td>$ALERT.FromType</td>
+			    	<td>$ALERT.ToType</td>
+			    </tr>
+#end
+			</tbody>
+		</table>
+	</body>
+</html>
