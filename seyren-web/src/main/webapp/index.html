@@ -1,22 +1,96 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
+    <title>Getting properties with event handlers</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <style>
+      html, body, #map-canvas {
+        height: 100%;
+        margin: 0px;
+        padding: 0px
+      }
+    </style>
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true"></script>
+    <script>
+function initialize() {
+  var myLatLng = new google.maps.LatLng(-29.363882, 121.044922);
+  var mySecLatLng = new google.maps.LatLng(-27.234242,131.039489);
 
-<meta charset="utf-8">
+  var mapOptions = {
+    zoom: 4,
+    center: myLatLng
+  };
 
-<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
-<link rel="stylesheet" type="text/css" href="css/bootstrap-theme.min.css">
-<link rel="stylesheet" type="text/css" href="css/style.css">
+  var map = new google.maps.Map(document.getElementById('map-canvas'),
+      mapOptions);
 
-</head>
+  var infowindow = new google.maps.InfoWindow({
+    content: 'Change the zoom level',
+    position: myLatLng
+  });
 
-<body>
+  //array of postions
+  var neighborhoods = [
+  new google.maps.LatLng(-31.363882, 121.044922),
+  new google.maps.LatLng(-32.363882, 121.044922),
+  new google.maps.LatLng(-33.363882, 121.044922),
+  new google.maps.LatLng(-34.363882, 121.044922)
+  ];
 
-<div id="map-canvas"></div>
+  var markers = [];
+  function addMarker(position) {
+  	var thisMarker=new google.maps.Marker({
+    position: position,
+    map: map,
+    title: 'Click to zoom'
+    });
+    markers.push(thisMarker);
+    var thisInfowindow = new google.maps.InfoWindow({
+  	content: ['Lat:'+ position.lat() ,
+  	          'Lng:' + position.lng() ].join('<br>'),
+  	position: position
+    });
+    //thisInfoindow.open(map);
+    google.maps.event.addListener(thisMarker, 'click', function() {
+      thisInfowindow.open(map,thisMarker);
+    });
 
-<script src="js/jquery-2.1.3.min.js"></script>
-<script src="js/bootstrap.min.js"></script>
-<script src="js/script.js"></script>
+ }
 
-</body>
+  for (var i = 0; i < neighborhoods.length; i++) {
+     addMarker(neighborhoods[i]);
+   }
+  
+
+  var secInfowindow = new google.maps.InfoWindow({
+  	content: ['Lat:'+ mySecLatLng.lat() ,
+  	          'Lng:' + mySecLatLng.lng() ].join('<br>'),
+  	position: mySecLatLng
+  });
+  
+
+  var secMarker = new google.maps.Marker({
+    position: mySecLatLng,
+    map: map,
+    title: 'Click to zoom'
+  });
+
+
+
+google.maps.event.addListener(secMarker, 'click', function() {
+    secInfowindow.open(map,secMarker);
+  });
+
+
+
+}
+
+google.maps.event.addDomListener(window, 'load', initialize);
+
+    </script>
+  </head>
+  <body>
+    <div id="map-canvas"></div>
+  </body>
 </html>
