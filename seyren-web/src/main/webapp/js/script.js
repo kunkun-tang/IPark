@@ -10,6 +10,8 @@
     'key': 'AIzaSyBRn6ciA8c873U6B1Rn7oe3TOjWjHhUCsk'
   };
 
+
+
   window.initmap = function() {
     var mapOptions = {
       center: { lat: 0, lng: 0},
@@ -18,6 +20,41 @@
 
     map = new google.maps.Map(document.getElementById('map-canvas'),
                               mapOptions);
+
+  //add array of postions
+  var neighborhoods = [
+  new google.maps.LatLng(-31.363882, 121.044922),
+  new google.maps.LatLng(-32.363882, 121.044922),
+  new google.maps.LatLng(-33.363882, 121.044922),
+  new google.maps.LatLng(-34.363882, 121.044922)
+  ];
+
+  var markers = [];
+  function addMarker(position) {
+    var thisMarker=new google.maps.Marker({
+    position: position,
+    map: map,
+    title: 'Click to zoom'
+    });
+    markers.push(thisMarker);
+    var thisInfowindow = new google.maps.InfoWindow({
+    content: ['Lat:'+ position.lat() ,
+              'Lng:' + position.lng() ].join('<br>'),
+    position: position
+    });
+    //thisInfoindow.open(map);
+    google.maps.event.addListener(thisMarker, 'click', function() {
+      thisInfowindow.open(map,thisMarker);
+    });
+
+  };
+
+  for (var i = 0; i < neighborhoods.length; i++) {
+     addMarker(neighborhoods[i]);
+   };
+  
+
+
   };
 
   $(document).ready(function() {
