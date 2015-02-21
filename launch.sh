@@ -1,0 +1,1 @@
+java -jar seyren-web/target/dependency/jetty-runner.jar seyren-web/target/seyren-web-1.3.0-SNAPSHOT
