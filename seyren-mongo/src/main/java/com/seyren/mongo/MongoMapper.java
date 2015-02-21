@@ -28,11 +28,7 @@ import org.joda.time.LocalTime;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import com.seyren.core.domain.Alert;
-import com.seyren.core.domain.AlertType;
-import com.seyren.core.domain.Check;
-import com.seyren.core.domain.Subscription;
-import com.seyren.core.domain.SubscriptionType;
+import com.seyren.core.domain.*;
 
 public class MongoMapper {
     
@@ -71,7 +67,32 @@ public class MongoMapper {
                 .withLastCheck(lastCheck)
                 .withSubscriptions(subscriptions);
     }
-    
+
+    public ParkingLot parkinglotFrom(DBObject dbo) {
+        String id = dbo.get("_id").toString();
+        String name = getString(dbo, "name");
+
+        Double price = getDouble(dbo, "price");
+        Double coorx = getDouble(dbo, "coorx");
+        Double coory = getDouble(dbo, "coory");
+
+        Integer max = getInteger(dbo, "max");
+        Integer available = getInteger(dbo, "available");
+
+        DateTime lastCheck = getDateTime(dbo, "lastCheck");
+
+        
+        return new ParkingLot().withId(id)
+                .withName(name)
+                .withPrice(price)
+                .withCoorx(coorx)
+                .withCoory(coory)
+                .withMax(max)
+                .withAvailable(available)
+                .withLastCheck(lastCheck);
+    }
+
+
     public Subscription subscriptionFrom(DBObject dbo) {
         String id = dbo.get("_id").toString();
         String target = getString(dbo, "target");
@@ -135,7 +156,11 @@ public class MongoMapper {
     public DBObject checkToDBObject(Check check) {
         return new BasicDBObject(propertiesToMap(check));
     }
-    
+
+    public DBObject parkinglotsToDBObject(ParkingLot pl) {
+        return new BasicDBObject(propertiesToMap(pl));
+    }
+
     public DBObject subscriptionToDBObject(Subscription subscription) {
         return new BasicDBObject(propertiesToMap(subscription));
     }
@@ -180,7 +205,21 @@ public class MongoMapper {
         }
         return map;
     }
-    
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private Map propertiesToMap(ParkingLot pl) {
+        Map map = new HashMap();
+        map.put("_id", pl.getId());
+        map.put("name", pl.getName());
+        map.put("price", pl.getPrice());
+        map.put("coorx", pl.getCoorx());
+        map.put("coory", pl.getCoory());
+        map.put("max", pl.getMax());
+        map.put("available", pl.getAvailable());
+        map.put("lastCheck", pl.getLastCheck());
+        return map;
+    }
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private Map propertiesToMap(Subscription subscription) {
         Map map = new HashMap();
@@ -274,7 +313,11 @@ public class MongoMapper {
     private Integer getInteger(DBObject dbo, String key) {
         return (Integer) dbo.get(key);
     }
-    
+
+    private Double getDouble(DBObject dbo, String key) {
+        return (Double) dbo.get(key);
+    }
+
     private BasicDBList getBasicDBList(DBObject dbo, String key) {
         BasicDBList result = (BasicDBList) dbo.get(key);
         if (result == null) {

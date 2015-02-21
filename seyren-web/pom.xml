@@ -102,9 +102,9 @@
                             </excludes>
                         </configuration>
                         <phase>process-resources</phase>
-                        <goals>
+<!--                         <goals>
                             <goal>jslint</goal>
-                        </goals>
+                        </goals> -->
                     </execution>
                 </executions>
             </plugin>

@@ -42,19 +42,13 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
-import com.seyren.core.domain.Alert;
-import com.seyren.core.domain.AlertType;
-import com.seyren.core.domain.Check;
-import com.seyren.core.domain.SeyrenResponse;
-import com.seyren.core.domain.Subscription;
-import com.seyren.core.store.AlertsStore;
-import com.seyren.core.store.ChecksStore;
-import com.seyren.core.store.SubscriptionsStore;
+import com.seyren.core.domain.*;
+import com.seyren.core.store.*;
 import com.seyren.core.util.config.SeyrenConfig;
 import com.seyren.core.util.hashing.TargetHash;
 
 @Named
-public class MongoStore implements ChecksStore, AlertsStore, SubscriptionsStore {
+public class MongoStore implements ChecksStore, AlertsStore, SubscriptionsStore, ParkingLotsStore{
     
     private static final Logger LOGGER = LoggerFactory.getLogger(MongoStore.class);
     
@@ -95,6 +89,9 @@ public class MongoStore implements ChecksStore, AlertsStore, SubscriptionsStore 
         LOGGER.info("Ensuring that we have all the indices we need");
         getChecksCollection().createIndex(new BasicDBObject("name", 1), new BasicDBObject("unique", true));
         getChecksCollection().createIndex(new BasicDBObject("enabled", 1).append("live", 1));
+
+        getParkinglotsCollection().createIndex(new BasicDBObject("name", 1), new BasicDBObject("unique", true));
+
         getAlertsCollection().createIndex(new BasicDBObject("timestamp", -1));
         getAlertsCollection().createIndex(new BasicDBObject("checkId", 1).append("targetHash", 1));
     }
@@ -129,7 +126,11 @@ public class MongoStore implements ChecksStore, AlertsStore, SubscriptionsStore 
     private DBCollection getChecksCollection() {
         return mongo.getCollection("checks");
     }
-    
+
+    private DBCollection getParkinglotsCollection() {
+        return mongo.getCollection("parkinglots");
+    }
+
     private DBCollection getAlertsCollection() {
         return mongo.getCollection("alerts");
     }
@@ -165,7 +166,22 @@ public class MongoStore implements ChecksStore, AlertsStore, SubscriptionsStore 
                 .withValues(checks)
                 .withTotal(dbc.count());
     }
-    
+
+    @Override
+    public SeyrenResponse<ParkingLot> getParklots(double x, double y, double radius) {
+        List<ParkingLot> parkinglots = new ArrayList<ParkingLot>();
+        DBCursor dbc = getParkinglotsCollection().find();
+
+        while (dbc.hasNext()) {
+            parkinglots.add(mapper.parkinglotFrom(dbc.next()));
+        }
+        //TODO:---- filter parkinglots based on center location and radius.
+
+        return new SeyrenResponse<ParkingLot>()
+                .withValues(parkinglots)
+                .withTotal(dbc.count());
+    }
+
     @Override
     public SeyrenResponse<Check> getChecksByState(Set<String> states, Boolean enabled) {
         List<Check> checks = new ArrayList<Check>();
@@ -215,7 +231,16 @@ public class MongoStore implements ChecksStore, AlertsStore, SubscriptionsStore 
         }
         return mapper.checkFrom(dbo);
     }
-    
+
+    @Override
+    public ParkingLot getParklot(String parkLotId) {
+        DBObject dbo = getParkinglotsCollection().findOne(object("_id", parkLotId));
+        if (dbo == null) {
+            return null;
+        }
+        return mapper.parkinglotFrom(dbo);
+    }
+
     @Override
     public void deleteCheck(String checkId) {
         getChecksCollection().remove(forId(checkId));
@@ -228,7 +253,14 @@ public class MongoStore implements ChecksStore, AlertsStore, SubscriptionsStore 
         getChecksCollection().insert(mapper.checkToDBObject(check));
         return check;
     }
-    
+
+    @Override
+    public ParkingLot createParklot(ParkingLot parkLot) {
+        parkLot.setId(ObjectId.get().toString());
+        getParkinglotsCollection().insert(mapper.parkinglotsToDBObject(parkLot));
+        return parkLot;
+    }
+
     @Override
     public Check saveCheck(Check check) {
         DBObject findObject = forId(check.getId());
@@ -254,7 +286,29 @@ public class MongoStore implements ChecksStore, AlertsStore, SubscriptionsStore 
         
         return check;
     }
-    
+
+    @Override
+    public ParkingLot saveParklot(ParkingLot pl) {
+        DBObject findObject = forId(pl.getId());
+        
+        DateTime lastCheck = pl.getLastCheck();
+        
+        DBObject partialObject = object("name", pl.getName())
+                .with("price", pl.getPrice())
+                .with("coorx", pl.getCoorx())
+                .with("coory", pl.getCoory())
+                .with("max", pl.getMax())
+                .with("available", pl.getAvailable())
+                .with("lastCheck", lastCheck == null ? null : new Date(lastCheck.getMillis()));
+        
+        DBObject setObject = object("$set", partialObject);
+        
+        getParkinglotsCollection().update(findObject, setObject);
+        
+        return pl;
+    }
+
+
     @Override
     public Check updateStateAndLastCheck(String checkId, AlertType state, DateTime lastCheck) {
         DBObject findObject = forId(checkId);
