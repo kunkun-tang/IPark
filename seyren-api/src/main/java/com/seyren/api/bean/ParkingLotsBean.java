@@ -50,7 +50,13 @@ public class ParkingLotsBean implements ParkingLotsResource {
     @Override
     public Response reservePark(String username, int parkID) {
         ParkingLot stored = parkingLotsStore.reserveParklot(username, parkID);
-        return Response.ok(stored).build();
+
+        Response response = Response.ok(stored).build();
+        System.out.println("the status is "+response.getStatus());          
+        System.out.println("the metadata is "+response.getEntity());
+        System.out.println("the entity "+response.getEntity());   
+
+        return response;
     }
 
 
