@@ -165,7 +165,7 @@
               $('#' + parkid).text('Cancel');
               if (reserved >= 0)
                 try {
-                  $('#' + reserved).text('Reserve');
+                  $('#park' + reserved).text('Reserve');
                 } catch (e) { }
               reserved = parseInt(d['id']);
             });
