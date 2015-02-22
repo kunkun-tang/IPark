@@ -1,4 +1,3 @@
-
 (function($, window, undefined){
 
   var map = undefined;
