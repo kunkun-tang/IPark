@@ -1,1 +1,12 @@
 html, body, #map-canvas { height: 100%; margin: 0; padding: 0;}
+.progress {
+    text-align:center;
+    width:100%;
+    margin:15px auto;
+     color: #777;
+}
+.progress-value {
+    position:absolute;
+    right:0;
+    left:0;
+}
