@@ -77,9 +77,11 @@ public interface ParkingLotsResource {
     Response getParkinglot(@PathParam("plId") String plId);
 
     @GET
-    @Path("/parkinglots/{plId}")
+    @Path("/reserve")
     @Produces(MediaType.APPLICATION_JSON)
-    Response reservePark(@QueryParam("username") String username, @QueryParam("parkID") int parkID);
+    Response reservePark(
+        @QueryParam("username") String username, 
+        @QueryParam("parkID") int parkID);
 
 
     // @PUT
