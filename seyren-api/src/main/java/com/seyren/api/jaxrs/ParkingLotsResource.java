@@ -61,6 +61,7 @@ public interface ParkingLotsResource {
     @Path("/parkinglots")
     @Produces(MediaType.APPLICATION_JSON)
     Response getParkinglots(
+                       @QueryParam("username") String username,
                        @QueryParam("coorx") double x,
                        @QueryParam("coory") double y,
                        @QueryParam("radius") double radius);
@@ -74,12 +75,20 @@ public interface ParkingLotsResource {
     @Path("/parkinglots/{plId}")
     @Produces(MediaType.APPLICATION_JSON)
     Response getParkinglot(@PathParam("plId") String plId);
-    
-    @PUT
-    @Path("/parkinglots/{plId}")
-    @Consumes(MediaType.APPLICATION_JSON)
+
+    @GET
+    @Path("/reserve")
     @Produces(MediaType.APPLICATION_JSON)
-    Response updateParkinglot(@PathParam("plId") String plId, ParkingLot pl);
+    Response reservePark(
+        @QueryParam("username") String username, 
+        @QueryParam("parkID") int parkID);
+
+
+    // @PUT
+    // @Path("/parkinglots/{plId}")
+    // @Consumes(MediaType.APPLICATION_JSON)
+    // @Produces(MediaType.APPLICATION_JSON)
+    // Response updateParkinglot(@PathParam("plId") String plId, ParkingLot pl);
     
     // @DELETE
     // @Path("/parkinglots/{plId}")

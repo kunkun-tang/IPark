@@ -88,7 +88,7 @@
         'x': 2.4,
         'y': 2,
         'radius': 10000,
-        'username': 'gongzhitaao'
+        'username': User
       },
       dataType: 'json'
     }).success(function(json) {
@@ -148,17 +148,20 @@
             dataType: 'json'
           })
             .success(function(d) {
+              console.log(d);
               swal("Cancelled!", "Your reservation has been cancelled.", "success");
               $('#' + parkid).text('Reserve');
               d['reserved'] = false;
             });
         } else {
+          alert('hello');
           $.ajax({
             url: ReserveUrl,
             data: {'parkID': parseInt(d['id']), 'username': User},
             dataType: 'json'
           })
             .success(function(d) {
+              console.log(d);
               swal("Reserved!", "Your reservation has been confirmed.", "success");
               $('#' + parkid).text('Cancel');
               d['reserved'] = true;

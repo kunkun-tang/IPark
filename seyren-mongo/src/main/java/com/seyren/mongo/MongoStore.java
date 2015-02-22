@@ -15,11 +15,10 @@ package com.seyren.mongo;
 
 import static com.seyren.mongo.NiceDBObject.*;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
+import java.lang.Math;
+
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -53,6 +52,8 @@ public class MongoStore implements ChecksStore, AlertsStore, SubscriptionsStore,
     private static final Logger LOGGER = LoggerFactory.getLogger(MongoStore.class);
     
     private MongoMapper mapper = new MongoMapper();
+    private Map<String, Integer> user_parklot =  Collections.synchronizedMap(new HashMap<String, Integer>());;
+    
     private DB mongo;
     
     @Inject
@@ -90,7 +91,7 @@ public class MongoStore implements ChecksStore, AlertsStore, SubscriptionsStore,
         getChecksCollection().createIndex(new BasicDBObject("name", 1), new BasicDBObject("unique", true));
         getChecksCollection().createIndex(new BasicDBObject("enabled", 1).append("live", 1));
 
-        getParkinglotsCollection().createIndex(new BasicDBObject("name", 1), new BasicDBObject("unique", true));
+        // getParkinglotsCollection().createIndex(new BasicDBObject("name", 1), new BasicDBObject("unique", true));
 
         getAlertsCollection().createIndex(new BasicDBObject("timestamp", -1));
         getAlertsCollection().createIndex(new BasicDBObject("checkId", 1).append("targetHash", 1));
@@ -167,13 +168,20 @@ public class MongoStore implements ChecksStore, AlertsStore, SubscriptionsStore,
                 .withTotal(dbc.count());
     }
 
+    public double getDist(double x1, double x2, double y1, double y2){
+        return Math.sqrt( (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) );
+    }
+
     @Override
-    public SeyrenResponse<ParkingLot> getParklots(double x, double y, double radius) {
+    public SeyrenResponse<ParkingLot> getParklots(String username, double x, double y, double radius) {
         List<ParkingLot> parkinglots = new ArrayList<ParkingLot>();
         DBCursor dbc = getParkinglotsCollection().find();
 
         while (dbc.hasNext()) {
-            parkinglots.add(mapper.parkinglotFrom(dbc.next()));
+            ParkingLot pl = mapper.parkinglotFrom(dbc.next());
+            double dist = getDist(x, pl.getCoorx(), y, pl.getCoory());
+            if(dist < radius && user_parklot.get(username) == null )
+                parkinglots.add(pl);
         }
         //TODO:---- filter parkinglots based on center location and radius.
 
@@ -288,24 +296,14 @@ public class MongoStore implements ChecksStore, AlertsStore, SubscriptionsStore,
     }
 
     @Override
-    public ParkingLot saveParklot(ParkingLot pl) {
-        DBObject findObject = forId(pl.getId());
-        
-        DateTime lastCheck = pl.getLastCheck();
-        
-        DBObject partialObject = object("name", pl.getName())
-                .with("price", pl.getPrice())
-                .with("coorx", pl.getCoorx())
-                .with("coory", pl.getCoory())
-                .with("max", pl.getMax())
-                .with("available", pl.getAvailable())
-                .with("lastCheck", lastCheck == null ? null : new Date(lastCheck.getMillis()));
-        
-        DBObject setObject = object("$set", partialObject);
-        
-        getParkinglotsCollection().update(findObject, setObject);
-        
-        return pl;
+    public ParkingLot reserveParklot(String username, int parkID) {
+        if(parkID>0) user_parklot.put(username, parkID);
+        else user_parklot.remove(username);
+        DBObject dbo = getParkinglotsCollection().findOne(object("_id", parkID));
+        if (dbo == null) {
+            return null;
+        }
+        return mapper.parkinglotFrom(dbo);
     }
 
 

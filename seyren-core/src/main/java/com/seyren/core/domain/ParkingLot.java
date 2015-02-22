@@ -45,6 +45,7 @@ public class ParkingLot {
     private int max;
     private int available;
     private DateTime lastCheck;
+    private boolean reserved=false;
 
 
     public String getId() {
@@ -151,6 +152,18 @@ public class ParkingLot {
         setLastCheck(lastCheck);
         return this;
     }
+
+    public boolean getReserved() {
+        return reserved;
+    }
     
+    public void setReserved(boolean reserved) {
+        this.reserved = reserved;
+    }
+
+    public ParkingLot withReserved(boolean reserved) {
+        setReserved(reserved);
+        return this;
+    }
 
 }

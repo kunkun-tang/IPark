@@ -42,10 +42,23 @@ public class ParkingLotsBean implements ParkingLotsResource {
     }
     
     @Override
-    public Response getParkinglots(double x, double y, double radius) {
-        SeyrenResponse<ParkingLot> pls = parkingLotsStore.getParklots(x, y, radius);
+    public Response getParkinglots(String username, double x, double y, double radius) {
+        SeyrenResponse<ParkingLot> pls = parkingLotsStore.getParklots(username, x, y, radius);
         return Response.ok(pls).build();
     }
+
+    @Override
+    public Response reservePark(String username, int parkID) {
+        ParkingLot stored = parkingLotsStore.reserveParklot(username, parkID);
+
+        Response response = Response.ok(stored).build();
+        System.out.println("the status is "+response.getStatus());          
+        System.out.println("the metadata is "+response.getEntity());
+        System.out.println("the entity "+response.getEntity());   
+
+        return response;
+    }
+
 
     @Override
     public Response createParkinglot(ParkingLot pl) {
@@ -54,15 +67,15 @@ public class ParkingLotsBean implements ParkingLotsResource {
         return Response.created(uri(stored.getId())).build();
     }
     
-    @Override
-    public Response updateParkinglot(String plID, ParkingLot pl) {
-        ParkingLot stored = parkingLotsStore.getParklot(plID);
-        if (stored == null) {
-            return Response.status(Status.NOT_FOUND).build();
-        }
-        stored = parkingLotsStore.saveParklot(pl);
-        return Response.ok(stored).build();
-    }
+    // @Override
+    // public Response updateParkinglot(String plID, ParkingLot pl) {
+    //     ParkingLot stored = parkingLotsStore.getParklot(plID);
+    //     if (stored == null) {
+    //         return Response.status(Status.NOT_FOUND).build();
+    //     }
+    //     stored = parkingLotsStore.saveParklot(pl);
+    //     return Response.ok(stored).build();
+    // }
     
     @Override
     public Response getParkinglot(String plID) {

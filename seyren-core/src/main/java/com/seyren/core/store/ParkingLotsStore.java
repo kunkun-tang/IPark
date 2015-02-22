@@ -35,12 +35,12 @@ public interface ParkingLotsStore {
      */
     // SeyrenResponse getChecksByPattern(List<String> checkFields, List<Pattern> patterns, Boolean enabled);
 
-    SeyrenResponse<ParkingLot> getParklots(double x, double y, double radius);
+    SeyrenResponse<ParkingLot> getParklots(String username, double x, double y, double radius);
         
     ParkingLot getParklot(String parkLotId);
     
     ParkingLot createParklot(ParkingLot parkLot);
     
-    ParkingLot saveParklot(ParkingLot parkLot);
+    ParkingLot reserveParklot(String username, int parkID);
     
 }
