@@ -11,6 +11,7 @@
 
   var DatUrl = '/api/parkinglots?';
   var ReserveUrl = '/api/reserve?';
+  var User = 'gongzhitaao';
 
   var initpos = { lat: 32.61, lng: -85.48 };
   var radius = 0;
@@ -21,7 +22,7 @@
   var directionsDisplay = undefined;
   var directionsService = undefined;
 
-  var reserved = {};
+  var parkinfo = [];
 
   window.initmap = function() {
 
@@ -91,20 +92,21 @@
       },
       dataType: 'json'
     }).success(function(json) {
-      var i, data = json;
+      var i;
+      parkinfo = json['values'];
 
       for (i = 0; i < park_markers.length; ++i)
         remove_marker(park_markers[i]);
 
       park_markers = [];
 
-      for (i = 0; i < data.length; ++i)
-        add_marker(data[i]);
+      for (i = 0; i < parkinfo.length; ++i)
+        add_marker(parkinfo[i]);
     });
   }
 
   function add_marker(d) {
-    var latlng = new google.maps.LatLng(d.Y_Coord, d.X_Coord);
+    var latlng = new google.maps.LatLng(d['coorx'], d['coory']);
     var marker = new google.maps.Marker({
       position: latlng,
       map: map,
@@ -117,7 +119,9 @@
       position: latlng
     });
 
-    cnt = $('<div/>').append(
+    var parkid = 'park' + d['id'];
+
+    var cnt = $('<div/>').append(
       $('<div/>', {'class': 'popover top'}),
       $('<div/>', {'class': 'arrow'}),
       $('<h3/>', {'class': 'popover-title', 'text': d['name']}),
@@ -125,6 +129,7 @@
       $('<p/>', {'text': d['price']}),
       $('<p/>', {'text': d['available'] + '/' + d['max']}),
       $('<button/>', {
+        'id': parkid,
         'type': 'button',
         'class': 'btn btn-default reserve-btn',
         'text': d['reserved'] ? 'Cancel' : 'Reserve' })
@@ -135,27 +140,28 @@
       info.open(map, marker);
       calcRoute(marker.position);
 
-      $('.reserve-btn').click(function(){
+      $('#' + parkid).click(function(){
         if (d['reserved']) {
           $.ajax({
             url: ReserveUrl,
-            data: {'parkID': -d['id'], 'username': d['username']},
+            data: {'parkID': -parseInt(d['id']), 'username': User},
             dataType: 'json'
           })
             .success(function(d) {
               swal("Cancelled!", "Your reservation has been cancelled.", "success");
-              $(this).text('Reserve');
+              $('#' + parkid).text('Reserve');
+              d['reserved'] = false;
             });
-
         } else {
           $.ajax({
             url: ReserveUrl,
-            data: {'parkID': d['id'], 'username': d['username']},
+            data: {'parkID': parseInt(d['id']), 'username': User},
             dataType: 'json'
           })
             .success(function(d) {
               swal("Reserved!", "Your reservation has been confirmed.", "success");
-              $(this).text('Cancel');
+              $('#' + parkid).text('Cancel');
+              d['reserved'] = true;
             });
         }
       });
