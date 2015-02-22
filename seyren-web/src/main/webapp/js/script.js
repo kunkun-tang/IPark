@@ -9,24 +9,19 @@
     'key': 'AIzaSyBRn6ciA8c873U6B1Rn7oe3TOjWjHhUCsk'
   };
 
-  var DatUrl = 'dat.json';
+  var DatUrl = '/api/parkinglots?';
+  var ReserveUrl = '/api/reserve?';
 
   var initpos = { lat: 32.61, lng: -85.48 };
   var radius = 0;
 
   var cur_marker = undefined;
   var park_markers = [];
-  //**********direction variables*****//
+
   var directionsDisplay = undefined;
   var directionsService = undefined;
-  var map;
-
-
-  /***********************************/
 
   var reserved = {};
-
-  var test_data = undefined;
 
   window.initmap = function() {
 
@@ -41,7 +36,7 @@
     //directions
     directionsDisplay = new google.maps.DirectionsRenderer();
     directionsDisplay.setMap(map);
-   
+
 
     cur_marker = new google.maps.Marker({
       position: new google.maps.LatLng(initpos.lat, initpos.lng),
@@ -52,36 +47,30 @@
     google.maps.event.addListener(map, 'click', function(event) {
       update(event.latLng);
       if(directionsDisplay!=undefined){
-       directionsDisplay.set('directions', null);
+        directionsDisplay.set('directions', null);
       }
     });
 
     google.maps.event.addListener(cur_marker,'dragend',function(event) {
       update(event.latlng,true);
-        if(directionsDisplay!=undefined){
-       directionsDisplay.set('directions', null);
+      if(directionsDisplay!=undefined){
+        directionsDisplay.set('directions', null);
       }
     });
-    
 
   };
 
+  function calcRoute(endPosition) {
 
-  //calculate route
-function calcRoute(endPosition) {
-  
-  
-  var request = {
+    var request = {
       origin: cur_marker.position,
       destination: endPosition,
       travelMode: google.maps.TravelMode.DRIVING
-  };
-  directionsService.route(request, function(response, status) {
+    };
+    directionsService.route(request, function(response, status) {
       directionsDisplay.setDirections(response);
-  });
-}
-
- 
+    });
+  }
 
   function update(loc, drag) {
     if (!drag)
@@ -92,65 +81,26 @@ function calcRoute(endPosition) {
       'radius': radius
     };
 
-    if (!test_data) {
-
-      $.ajax({
-        url: DatUrl,
-        dataType: 'json'
-      }).success(function(json) {
-        var i, test_data = json['value'];
-
-        function shuffle(o) {
-          for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
-          return o;
-        };
-
-        function range(a, b) {
-          var res = [];
-          var step = a < b ? 1 : -1;
-          for (var i = a; i != b; i += step)
-            res.push(i);
-          return res;
-        }
-
-        var rng = shuffle(range(0, test_data.length));
-
-        for (i = 0; i < park_markers.length; ++i)
-          remove_marker(park_markers[i]);
-
-        park_markers = [];
-
-        for (i = 0; i < 5; ++i)
-          add_marker(test_data[rng[i]]);
-      });
-
-    } else {
-      var i, test_data = json['value'];
-
-      function shuffle(o) {
-        for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
-        return o;
-      };
-
-      function range(a, b) {
-        var res = [];
-        var step = a < b ? 1 : -1;
-        for (var i = a; i != b; i += step)
-          res.push(i);
-        return res;
-      }
-
-      var rng = shuffle(range(0, test_data.length));
+    $.ajax({
+      url: DatUrl,
+      data: {
+        'x': 2.4,
+        'y': 2,
+        'radius': 10000,
+        'username': 'gongzhitaao'
+      },
+      dataType: 'json'
+    }).success(function(json) {
+      var i, data = json;
 
       for (i = 0; i < park_markers.length; ++i)
         remove_marker(park_markers[i]);
 
       park_markers = [];
 
-      for (i = 0; i < 5; ++i)
-        add_marker(test_data[rng[i]]);
-
-    }
+      for (i = 0; i < data.length; ++i)
+        add_marker(data[i]);
+    });
   }
 
   function add_marker(d) {
@@ -167,40 +117,55 @@ function calcRoute(endPosition) {
       position: latlng
     });
 
-    google.maps.event.addListener(marker, 'click', function() {
-      info.setContent($('<div/>').append($('<button/>', {
+    cnt = $('<div/>').append(
+      $('<div/>', {'class': 'popover top'}),
+      $('<div/>', {'class': 'arrow'}),
+      $('<h3/>', {'class': 'popover-title', 'text': d['name']}),
+      $('<div/>'), {'class': 'popover-content'},
+      $('<p/>', {'text': d['price']}),
+      $('<p/>', {'text': d['available'] + '/' + d['max']}),
+      $('<button/>', {
         'type': 'button',
         'class': 'btn btn-default reserve-btn',
-        'text': d.reserved ? 'Cancel' : 'Reserve' })).html());
+        'text': d['reserved'] ? 'Cancel' : 'Reserve' })
+    ).html();
+
+    google.maps.event.addListener(marker, 'click', function() {
+      info.setContent(cnt);
       info.open(map, marker);
       calcRoute(marker.position);
 
-
       $('.reserve-btn').click(function(){
-        if (d.reserved) {
-          swal("Cancelled!", "Your reservation has been cancelled.", "success");
-          $(this).text('Reserve');
-          d.reserved = false;
+        if (d['reserved']) {
+          $.ajax({
+            url: ReserveUrl,
+            data: {'parkID': -d['id'], 'username': d['username']},
+            dataType: 'json'
+          })
+            .success(function(d) {
+              swal("Cancelled!", "Your reservation has been cancelled.", "success");
+              $(this).text('Reserve');
+            });
+
         } else {
-          swal("Reserved!", "Your reservation has been confirmed.", "success");
-          $(this).text('Cancel');
-          d.reserved = true;
+          $.ajax({
+            url: ReserveUrl,
+            data: {'parkID': d['id'], 'username': d['username']},
+            dataType: 'json'
+          })
+            .success(function(d) {
+              swal("Reserved!", "Your reservation has been confirmed.", "success");
+              $(this).text('Cancel');
+            });
         }
       });
-
     });
   }
-  
-
-  
-  
-
 
   function remove_marker(mk) {
     mk.setMap(null);
     mk = null;
   }
-
 
   $(document).ready(function() {
 
