@@ -16,6 +16,13 @@
 
   var cur_marker = undefined;
   var park_markers = [];
+  //**********direction variables*****//
+  var directionsDisplay = undefined;
+  var directionsService = undefined;
+  var map;
+
+
+  /***********************************/
 
   var reserved = {};
 
@@ -30,6 +37,11 @@
 
     map = new google.maps.Map(document.getElementById('map-canvas'),
                               mapOptions);
+    directionsService = new google.maps.DirectionsService();
+    //directions
+    directionsDisplay = new google.maps.DirectionsRenderer();
+    directionsDisplay.setMap(map);
+   
 
     cur_marker = new google.maps.Marker({
       position: new google.maps.LatLng(initpos.lat, initpos.lng),
@@ -38,14 +50,38 @@
     });
 
     google.maps.event.addListener(map, 'click', function(event) {
-      update(event.latLnga);
+      update(event.latLng);
+      if(directionsDisplay!=undefined){
+       directionsDisplay.set('directions', null);
+      }
     });
 
-    google.maps.event.addListener(cur_marker,'dragend', function(event) {
-      update(event.latlng, true);
+    google.maps.event.addListener(cur_marker,'dragend',function(event) {
+      update(event.latlng,true);
+        if(directionsDisplay!=undefined){
+       directionsDisplay.set('directions', null);
+      }
     });
+    
 
   };
+
+
+  //calculate route
+function calcRoute(endPosition) {
+  
+  
+  var request = {
+      origin: cur_marker.position,
+      destination: endPosition,
+      travelMode: google.maps.TravelMode.DRIVING
+  };
+  directionsService.route(request, function(response, status) {
+      directionsDisplay.setDirections(response);
+  });
+}
+
+ 
 
   function update(loc, drag) {
     if (!drag)
@@ -137,6 +173,8 @@
         'class': 'btn btn-default reserve-btn',
         'text': d.reserved ? 'Cancel' : 'Reserve' })).html());
       info.open(map, marker);
+      calcRoute(marker.position);
+
 
       $('.reserve-btn').click(function(){
         if (d.reserved) {
@@ -149,13 +187,20 @@
           d.reserved = true;
         }
       });
+
     });
   }
+  
+
+  
+  
+
 
   function remove_marker(mk) {
     mk.setMap(null);
     mk = null;
   }
+
 
   $(document).ready(function() {
 
