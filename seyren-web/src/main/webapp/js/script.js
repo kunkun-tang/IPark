@@ -163,6 +163,7 @@
             .success(function(d) {
               swal("Reserved!", "Your reservation has been confirmed.", "success");
               $('#' + parkid).text('Cancel');
+              $('#' + reserved).text('Reserve');
               reserved = parseInt(d['id']);
             });
         }
