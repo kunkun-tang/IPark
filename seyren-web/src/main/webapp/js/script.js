@@ -42,6 +42,8 @@
 
   };
 
+ 
+
   function update(loc, flag) {
     if (flag)
       cur_marker.setPosition(loc);
@@ -91,17 +93,22 @@
     });
 
     park_markers.push(marker);
-
+   
     var info = new google.maps.InfoWindow({
       content: ['Lat:'+ latlng.lat(),
-  	        'Lng:' + latlng.lng()].join('<br />'),
+  	        'Lng:' + latlng.lng(),
+            '<button onclick="myFunction()">Reserve</button>'].join('<br/>'),
       position: latlng
     });
+    
+  
 
     google.maps.event.addListener(marker, 'click', function() {
       info.open(map, marker);
     });
   }
+
+  
 
   function remove_marker(mk) {
     mk.setMap(null);
@@ -120,3 +127,8 @@
   });
 
 })(jQuery, window);
+
+ function myFunction() {
+    alert("You have successfully reserved a spot at this parking lot!");
+    
+  }
