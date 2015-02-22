@@ -20,6 +20,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.lang.Math;
+
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -167,13 +169,20 @@ public class MongoStore implements ChecksStore, AlertsStore, SubscriptionsStore,
                 .withTotal(dbc.count());
     }
 
+    public double getDist(double x1, double x2, double y1, double y2){
+        return Math.sqrt( (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) );
+    }
+
     @Override
     public SeyrenResponse<ParkingLot> getParklots(double x, double y, double radius) {
         List<ParkingLot> parkinglots = new ArrayList<ParkingLot>();
         DBCursor dbc = getParkinglotsCollection().find();
 
         while (dbc.hasNext()) {
-            parkinglots.add(mapper.parkinglotFrom(dbc.next()));
+            ParkingLot pl = mapper.parkinglotFrom(dbc.next());
+            double dist = getDist(x, pl.getCoorx(), y, pl.getCoory());
+            if(dist < radius)
+                parkinglots.add(pl);
         }
         //TODO:---- filter parkinglots based on center location and radius.
 
