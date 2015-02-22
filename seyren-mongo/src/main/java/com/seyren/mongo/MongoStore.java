@@ -15,10 +15,7 @@ package com.seyren.mongo;
 
 import static com.seyren.mongo.NiceDBObject.*;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.lang.Math;
 
@@ -55,6 +52,8 @@ public class MongoStore implements ChecksStore, AlertsStore, SubscriptionsStore,
     private static final Logger LOGGER = LoggerFactory.getLogger(MongoStore.class);
     
     private MongoMapper mapper = new MongoMapper();
+    private Map<String, Integer> user_parklot =  Collections.synchronizedMap(new HashMap<String, Integer>());;
+    
     private DB mongo;
     
     @Inject
@@ -92,7 +91,7 @@ public class MongoStore implements ChecksStore, AlertsStore, SubscriptionsStore,
         getChecksCollection().createIndex(new BasicDBObject("name", 1), new BasicDBObject("unique", true));
         getChecksCollection().createIndex(new BasicDBObject("enabled", 1).append("live", 1));
 
-        getParkinglotsCollection().createIndex(new BasicDBObject("name", 1), new BasicDBObject("unique", true));
+        // getParkinglotsCollection().createIndex(new BasicDBObject("name", 1), new BasicDBObject("unique", true));
 
         getAlertsCollection().createIndex(new BasicDBObject("timestamp", -1));
         getAlertsCollection().createIndex(new BasicDBObject("checkId", 1).append("targetHash", 1));
@@ -174,14 +173,14 @@ public class MongoStore implements ChecksStore, AlertsStore, SubscriptionsStore,
     }
 
     @Override
-    public SeyrenResponse<ParkingLot> getParklots(double x, double y, double radius) {
+    public SeyrenResponse<ParkingLot> getParklots(String username, double x, double y, double radius) {
         List<ParkingLot> parkinglots = new ArrayList<ParkingLot>();
         DBCursor dbc = getParkinglotsCollection().find();
 
         while (dbc.hasNext()) {
             ParkingLot pl = mapper.parkinglotFrom(dbc.next());
             double dist = getDist(x, pl.getCoorx(), y, pl.getCoory());
-            if(dist < radius)
+            if(dist < radius && ( user_parklot.get(username) == null || pl.getId() != user_parklot.get(username) ))
                 parkinglots.add(pl);
         }
         //TODO:---- filter parkinglots based on center location and radius.

@@ -311,7 +311,7 @@ public class MongoMapper {
     }
     
     private Integer getInteger(DBObject dbo, String key) {
-        return Integer.parseInt((String)dbo.get(key));
+        return (Integer) dbo.get(key);
     }
 
     private Double getDouble(DBObject dbo, String key) {

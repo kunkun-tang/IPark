@@ -61,6 +61,7 @@ public interface ParkingLotsResource {
     @Path("/parkinglots")
     @Produces(MediaType.APPLICATION_JSON)
     Response getParkinglots(
+                       @QueryParam("username") String username,
                        @QueryParam("coorx") double x,
                        @QueryParam("coory") double y,
                        @QueryParam("radius") double radius);

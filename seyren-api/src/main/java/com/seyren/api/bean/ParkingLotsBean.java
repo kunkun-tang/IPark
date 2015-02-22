@@ -42,8 +42,8 @@ public class ParkingLotsBean implements ParkingLotsResource {
     }
     
     @Override
-    public Response getParkinglots(double x, double y, double radius) {
-        SeyrenResponse<ParkingLot> pls = parkingLotsStore.getParklots(x, y, radius);
+    public Response getParkinglots(String username, double x, double y, double radius) {
+        SeyrenResponse<ParkingLot> pls = parkingLotsStore.getParklots(username, x, y, radius);
         return Response.ok(pls).build();
     }
 
