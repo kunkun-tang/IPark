@@ -20,12 +20,16 @@
   var directionsDisplay = undefined;
   var directionsService = undefined;
   var map;
-  var start ;
-  var end ;
+
 
   /***********************************/
 
+  var reserved = {};
+
+  var test_data = undefined;
+
   window.initmap = function() {
+
     var mapOptions = {
       center: initpos,
       zoom: 16
@@ -46,14 +50,14 @@
     });
 
     google.maps.event.addListener(map, 'click', function(event) {
-      update(event.latLng, true);
+      update(event.latLng);
       if(directionsDisplay!=undefined){
        directionsDisplay.set('directions', null);
       }
     });
 
     google.maps.event.addListener(cur_marker,'dragend',function(event) {
-      update(event.latlng);
+      update(event.latlng,true);
         if(directionsDisplay!=undefined){
        directionsDisplay.set('directions', null);
       }
@@ -62,10 +66,10 @@
 
   };
 
+
   //calculate route
 function calcRoute(endPosition) {
-   //start = new google.maps.LatLng(32.61, -85.480000);
-   //end = new google.maps.LatLng(32.61, -85.490000);
+  
   
   var request = {
       origin: cur_marker.position,
@@ -73,16 +77,14 @@ function calcRoute(endPosition) {
       travelMode: google.maps.TravelMode.DRIVING
   };
   directionsService.route(request, function(response, status) {
-    if (true) {
       directionsDisplay.setDirections(response);
-    }
   });
 }
 
  
 
-  function update(loc, flag) {
-    if (flag)
+  function update(loc, drag) {
+    if (!drag)
       cur_marker.setPosition(loc);
 
     var param = {
@@ -90,11 +92,40 @@ function calcRoute(endPosition) {
       'radius': radius
     };
 
-    $.ajax({
-      url: DatUrl,
-      dataType: 'json'
-    }).success(function(json) {
-      var i, dat = json['value'];
+    if (!test_data) {
+
+      $.ajax({
+        url: DatUrl,
+        dataType: 'json'
+      }).success(function(json) {
+        var i, test_data = json['value'];
+
+        function shuffle(o) {
+          for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
+          return o;
+        };
+
+        function range(a, b) {
+          var res = [];
+          var step = a < b ? 1 : -1;
+          for (var i = a; i != b; i += step)
+            res.push(i);
+          return res;
+        }
+
+        var rng = shuffle(range(0, test_data.length));
+
+        for (i = 0; i < park_markers.length; ++i)
+          remove_marker(park_markers[i]);
+
+        park_markers = [];
+
+        for (i = 0; i < 5; ++i)
+          add_marker(test_data[rng[i]]);
+      });
+
+    } else {
+      var i, test_data = json['value'];
 
       function shuffle(o) {
         for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
@@ -109,7 +140,7 @@ function calcRoute(endPosition) {
         return res;
       }
 
-      var rng = shuffle(range(0, dat.length));
+      var rng = shuffle(range(0, test_data.length));
 
       for (i = 0; i < park_markers.length; ++i)
         remove_marker(park_markers[i]);
@@ -117,8 +148,9 @@ function calcRoute(endPosition) {
       park_markers = [];
 
       for (i = 0; i < 5; ++i)
-        add_marker(dat[rng[i]]);
-    });
+        add_marker(test_data[rng[i]]);
+
+    }
   }
 
   function add_marker(d) {
@@ -130,19 +162,32 @@ function calcRoute(endPosition) {
     });
 
     park_markers.push(marker);
-   
+
     var info = new google.maps.InfoWindow({
-      content: ['Lat:'+ latlng.lat(),
-  	        'Lng:' + latlng.lng(),
-            '<button onclick="myFunction()">Reserve</button>'].join('<br/>'),
       position: latlng
     });
-    
-  
 
     google.maps.event.addListener(marker, 'click', function() {
+      info.setContent($('<div/>').append($('<button/>', {
+        'type': 'button',
+        'class': 'btn btn-default reserve-btn',
+        'text': d.reserved ? 'Cancel' : 'Reserve' })).html());
       info.open(map, marker);
       calcRoute(marker.position);
+
+
+      $('.reserve-btn').click(function(){
+        if (d.reserved) {
+          swal("Cancelled!", "Your reservation has been cancelled.", "success");
+          $(this).text('Reserve');
+          d.reserved = false;
+        } else {
+          swal("Reserved!", "Your reservation has been confirmed.", "success");
+          $(this).text('Cancel');
+          d.reserved = true;
+        }
+      });
+
     });
   }
   
@@ -150,8 +195,6 @@ function calcRoute(endPosition) {
   
   
 
-
-  
 
   function remove_marker(mk) {
     mk.setMap(null);
@@ -171,8 +214,3 @@ function calcRoute(endPosition) {
   });
 
 })(jQuery, window);
-
- function myFunction() {
-    alert("You have successfully reserved a spot at this parking lot!");
-    
-  }
