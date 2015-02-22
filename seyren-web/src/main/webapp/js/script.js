@@ -118,24 +118,21 @@
       position: latlng
     });
 
-    var parkid = 'park' + d['id'];
-
     var cnt = $('<div/>').append(
       $('<div/>', {'class': 'popover top'}),
       $('<div/>', {'class': 'arrow'}),
       $('<h3/>', {'class': 'popover-title', 'text': d['name']}),
       $('<div/>'), {'class': 'popover-content'},
       $('<p/>', {'text': 'price: ' + d['price']}),
-      // $('<p/>', {'text': d['available'] + '/' + d['max']}),
-
       $('<div/>', {'class': 'progress'}).append(
-      $('<div/>', {'class': 'progress-bar progress-bar-striped', 'role': 'progressbar', 
-        'aria-valuenow': '0', 'aria-valuemin': '0', 
-        'aria-valuemax': '100', 'style': 'width:'+d['available']/d['max']*100+'%', 'text': '' +d['available'] + '/' + d['max']})
-      ),
-
+        $('<div/>', {
+          'id': 'prog' + d['id'],
+          'class': 'progress-bar progress-bar-striped', 'role': 'progressbar',
+          'aria-valuenow': '0', 'aria-valuemin': '0',
+          'aria-valuemax': '100', 'style': 'width:' + d['available']/d['max'] * 100 + '%',
+          'text': '' + d['available'] + '/' + d['max']})),
       $('<button/>', {
-        'id': parkid,
+        'id': 'park' + d['id'],
         'type': 'button',
         'class': 'btn btn-default reserve-btn',
         'text': d['reserved'] ? 'Cancel' : 'Reserve' })
@@ -149,7 +146,7 @@
       info.open(map, marker);
       calcRoute(marker.position);
 
-      $('#' + parkid).click(function(){
+      $('#park' + d['id']).click(function(){
         if (reserved == parseInt(d['id'])) {
           $.ajax({
             url: ReserveUrl,
@@ -158,7 +155,8 @@
           })
             .success(function(d) {
               swal("Cancelled!", "Your reservation has been cancelled.", "success");
-              $('#' + parkid).text('Reserve');
+              $('#park' + d['id']).text('Reserve');
+              $('#prog' + d['id']).text('' + (d['available'] + 1) + '/' + d['max']);
               reserved = -1;
             });
         } else {
@@ -174,9 +172,10 @@
               if (reserved >= 0)
                 try {
                   $('#park' + reserved).text('Reserve');
-                
+                  $('#prog' + d['id']).text('' + (d['available'] + 1) + '/' + d['max']);
                 } catch (e) { }
               reserved = parseInt(d['id']);
+              $('#prog' + d['id']).text('' + (d['available'] - 1) + '/' + d['max']);
             });
         }
       });
