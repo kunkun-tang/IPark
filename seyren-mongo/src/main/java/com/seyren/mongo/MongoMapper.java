@@ -80,6 +80,7 @@ public class MongoMapper {
         Integer available = getInteger(dbo, "available");
 
         DateTime lastCheck = getDateTime(dbo, "lastCheck");
+        Boolean reserved = getBoolean(dbo, "reserved");
 
         
         return new ParkingLot().withId(id)
@@ -89,7 +90,8 @@ public class MongoMapper {
                 .withCoory(coory)
                 .withMax(max)
                 .withAvailable(available)
-                .withLastCheck(lastCheck);
+                .withLastCheck(lastCheck)
+                .withReserved(reserved);
     }
 
 
@@ -217,6 +219,7 @@ public class MongoMapper {
         map.put("max", pl.getMax());
         map.put("available", pl.getAvailable());
         map.put("lastCheck", pl.getLastCheck());
+        map.put("reserved", pl.getReserved());
         return map;
     }
 

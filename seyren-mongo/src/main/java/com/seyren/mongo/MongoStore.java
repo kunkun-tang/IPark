@@ -180,8 +180,9 @@ public class MongoStore implements ChecksStore, AlertsStore, SubscriptionsStore,
         while (dbc.hasNext()) {
             ParkingLot pl = mapper.parkinglotFrom(dbc.next());
             double dist = getDist(x, pl.getCoorx(), y, pl.getCoory());
-            if(dist < radius && user_parklot.get(username) == null )
-                parkinglots.add(pl);
+            // if(dist < radius && user_parklot.get(username) == null )
+            
+            parkinglots.add(pl);
         }
         //TODO:---- filter parkinglots based on center location and radius.
 
@@ -297,13 +298,43 @@ public class MongoStore implements ChecksStore, AlertsStore, SubscriptionsStore,
 
     @Override
     public ParkingLot reserveParklot(String username, int parkID) {
-        if(parkID>0) user_parklot.put(username, parkID);
-        else user_parklot.remove(username);
-        DBObject dbo = getParkinglotsCollection().findOne(object("_id", parkID));
+        // if(parkID>0) user_parklot.put(username, parkID);
+        // else user_parklot.remove(username);
+
+        System.out.println("username: " + username + "  parkID: "+parkID);
+        DBObject dbo = getParkinglotsCollection().findOne(object("_id", Integer.toString(parkID>0?parkID:-parkID)));
         if (dbo == null) {
             return null;
         }
-        return mapper.parkinglotFrom(dbo);
+        System.out.println("dbo is not null");
+        ParkingLot pl = mapper.parkinglotFrom(dbo);
+        if(parkID > 0){
+
+            if(user_parklot.get(username) != null){
+                DBObject other = getParkinglotsCollection().findOne(object("_id", Integer.toString(user_parklot.get(username))));
+                DBObject partialObject = object("reserved", false);
+                DBObject setObject = object("$set", partialObject);
+                getParkinglotsCollection().update(other, setObject);
+                user_parklot.remove(username);
+            }
+
+            pl.setReserved(true);
+            DBObject partialObject = object("reserved", true);
+            DBObject setObject = object("$set", partialObject);
+            getParkinglotsCollection().update(dbo, setObject);
+            user_parklot.put(username, parkID);
+        }
+        else{
+            pl.setReserved(false);
+            if(user_parklot.get(username) != null)
+                user_parklot.remove(username);
+            DBObject partialObject = object("reserved", false);
+            DBObject setObject = object("$set", partialObject);
+            getParkinglotsCollection().update(dbo, setObject);  
+        }
+        System.out.println(pl.getId());
+
+        return pl;
     }
 
 
