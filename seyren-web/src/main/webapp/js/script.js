@@ -105,10 +105,12 @@
   }
 
   function add_marker(d) {
+    var perc = ((d['available'] / d['max'] * 100) % 10) * 10;
     var latlng = new google.maps.LatLng(d['coorx'], d['coory']);
     var marker = new google.maps.Marker({
       position: latlng,
       map: map,
+      icon: 'img/Icon ' + perc,
       title: 'Click to zoom'
     });
 
