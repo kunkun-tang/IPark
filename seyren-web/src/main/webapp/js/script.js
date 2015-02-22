@@ -22,7 +22,7 @@
   var directionsDisplay = undefined;
   var directionsService = undefined;
 
-  var parkinfo = [];
+  var reserved = -1;
 
   window.initmap = function() {
 
@@ -92,16 +92,15 @@
       },
       dataType: 'json'
     }).success(function(json) {
-      var i;
-      parkinfo = json['values'];
+      var i, data = json['values'];
 
       for (i = 0; i < park_markers.length; ++i)
         remove_marker(park_markers[i]);
 
       park_markers = [];
 
-      for (i = 0; i < parkinfo.length; ++i)
-        add_marker(parkinfo[i]);
+      for (i = 0; i < data.length; ++i)
+        add_marker(data[i]);
     });
   }
 
@@ -135,36 +134,36 @@
         'text': d['reserved'] ? 'Cancel' : 'Reserve' })
     ).html();
 
+    if (d['reserved'])
+      reserved = d['id'];
+
     google.maps.event.addListener(marker, 'click', function() {
       info.setContent(cnt);
       info.open(map, marker);
       calcRoute(marker.position);
 
       $('#' + parkid).click(function(){
-        if (d['reserved']) {
+        if (reserved == parseInt(d['id'])) {
           $.ajax({
             url: ReserveUrl,
             data: {'parkID': -parseInt(d['id']), 'username': User},
             dataType: 'json'
           })
             .success(function(d) {
-              console.log(d);
               swal("Cancelled!", "Your reservation has been cancelled.", "success");
               $('#' + parkid).text('Reserve');
-              d['reserved'] = false;
+              reserved = -1;
             });
         } else {
-          alert('hello');
           $.ajax({
             url: ReserveUrl,
             data: {'parkID': parseInt(d['id']), 'username': User},
             dataType: 'json'
           })
             .success(function(d) {
-              console.log(d);
               swal("Reserved!", "Your reservation has been confirmed.", "success");
               $('#' + parkid).text('Cancel');
-              d['reserved'] = true;
+              reserved = parseInt(d['id']);
             });
         }
       });
