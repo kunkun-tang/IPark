@@ -125,8 +125,15 @@
       $('<div/>', {'class': 'arrow'}),
       $('<h3/>', {'class': 'popover-title', 'text': d['name']}),
       $('<div/>'), {'class': 'popover-content'},
-      $('<p/>', {'text': d['price']}),
-      $('<p/>', {'text': d['available'] + '/' + d['max']}),
+      $('<p/>', {'text': 'price: ' + d['price']}),
+      // $('<p/>', {'text': d['available'] + '/' + d['max']}),
+
+      $('<div/>', {'class': 'progress'}).append(
+      $('<div/>', {'class': 'progress-bar progress-bar-striped', 'role': 'progressbar', 
+        'aria-valuenow': '0', 'aria-valuemin': '0', 
+        'aria-valuemax': '100', 'style': 'width:'+d['available']/d['max']*100+'%', 'text': '' +d['available'] + '/' + d['max']})
+      ),
+
       $('<button/>', {
         'id': parkid,
         'type': 'button',
@@ -163,9 +170,11 @@
             .success(function(d) {
               swal("Reserved!", "Your reservation has been confirmed.", "success");
               $('#' + parkid).text('Cancel');
+              console.log(reserved);
               if (reserved >= 0)
                 try {
-                  $('#' + reserved).text('Reserve');
+                  $('#park' + reserved).text('Reserve');
+                
                 } catch (e) { }
               reserved = parseInt(d['id']);
             });
