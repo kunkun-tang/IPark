@@ -41,6 +41,6 @@ public interface ParkingLotsStore {
     
     ParkingLot createParklot(ParkingLot parkLot);
     
-    ParkingLot saveParklot(ParkingLot parkLot);
+    ParkingLot reserveParklot(String username, int parkID);
     
 }

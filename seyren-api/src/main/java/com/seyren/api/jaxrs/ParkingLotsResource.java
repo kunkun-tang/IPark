@@ -75,12 +75,18 @@ public interface ParkingLotsResource {
     @Path("/parkinglots/{plId}")
     @Produces(MediaType.APPLICATION_JSON)
     Response getParkinglot(@PathParam("plId") String plId);
-    
-    @PUT
+
+    @GET
     @Path("/parkinglots/{plId}")
-    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    Response updateParkinglot(@PathParam("plId") String plId, ParkingLot pl);
+    Response reservePark(@QueryParam("username") String username, @QueryParam("parkID") int parkID);
+
+
+    // @PUT
+    // @Path("/parkinglots/{plId}")
+    // @Consumes(MediaType.APPLICATION_JSON)
+    // @Produces(MediaType.APPLICATION_JSON)
+    // Response updateParkinglot(@PathParam("plId") String plId, ParkingLot pl);
     
     // @DELETE
     // @Path("/parkinglots/{plId}")

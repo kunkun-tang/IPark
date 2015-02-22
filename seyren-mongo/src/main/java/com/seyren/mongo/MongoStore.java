@@ -180,7 +180,7 @@ public class MongoStore implements ChecksStore, AlertsStore, SubscriptionsStore,
         while (dbc.hasNext()) {
             ParkingLot pl = mapper.parkinglotFrom(dbc.next());
             double dist = getDist(x, pl.getCoorx(), y, pl.getCoory());
-            if(dist < radius && ( user_parklot.get(username) == null || pl.getId() != user_parklot.get(username) ))
+            if(dist < radius && user_parklot.get(username) == null )
                 parkinglots.add(pl);
         }
         //TODO:---- filter parkinglots based on center location and radius.
@@ -296,24 +296,14 @@ public class MongoStore implements ChecksStore, AlertsStore, SubscriptionsStore,
     }
 
     @Override
-    public ParkingLot saveParklot(ParkingLot pl) {
-        DBObject findObject = forId(pl.getId());
-        
-        DateTime lastCheck = pl.getLastCheck();
-        
-        DBObject partialObject = object("name", pl.getName())
-                .with("price", pl.getPrice())
-                .with("coorx", pl.getCoorx())
-                .with("coory", pl.getCoory())
-                .with("max", pl.getMax())
-                .with("available", pl.getAvailable())
-                .with("lastCheck", lastCheck == null ? null : new Date(lastCheck.getMillis()));
-        
-        DBObject setObject = object("$set", partialObject);
-        
-        getParkinglotsCollection().update(findObject, setObject);
-        
-        return pl;
+    public ParkingLot reserveParklot(String username, int parkID) {
+        if(parkID>0) user_parklot.put(username, parkID);
+        else user_parklot.remove(username);
+        DBObject dbo = getParkinglotsCollection().findOne(object("_id", parkID));
+        if (dbo == null) {
+            return null;
+        }
+        return mapper.parkinglotFrom(dbo);
     }
 
 

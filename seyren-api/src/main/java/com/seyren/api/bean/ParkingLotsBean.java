@@ -48,21 +48,28 @@ public class ParkingLotsBean implements ParkingLotsResource {
     }
 
     @Override
+    public Response reservePark(String username, int parkID) {
+        ParkingLot stored = parkingLotsStore.reserveParklot(username, parkID);
+        return Response.ok(stored).build();
+    }
+
+
+    @Override
     public Response createParkinglot(ParkingLot pl) {
 
         ParkingLot stored = parkingLotsStore.createParklot(pl);
         return Response.created(uri(stored.getId())).build();
     }
     
-    @Override
-    public Response updateParkinglot(String plID, ParkingLot pl) {
-        ParkingLot stored = parkingLotsStore.getParklot(plID);
-        if (stored == null) {
-            return Response.status(Status.NOT_FOUND).build();
-        }
-        stored = parkingLotsStore.saveParklot(pl);
-        return Response.ok(stored).build();
-    }
+    // @Override
+    // public Response updateParkinglot(String plID, ParkingLot pl) {
+    //     ParkingLot stored = parkingLotsStore.getParklot(plID);
+    //     if (stored == null) {
+    //         return Response.status(Status.NOT_FOUND).build();
+    //     }
+    //     stored = parkingLotsStore.saveParklot(pl);
+    //     return Response.ok(stored).build();
+    // }
     
     @Override
     public Response getParkinglot(String plID) {
